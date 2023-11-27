@@ -24,7 +24,7 @@
                         "label": "API Documentation",
                         "name": "apiDocs",
                         "type": "string",
-                        "description": "Description of how API works. Please refer to more <a target=\"_blank\" href=\"https://github.com/langchain-ai/langchain/blob/master/libs/langchain/langchain/chains/api/open_meteo_docs.py\">examples</a>",
+                        "description": "Description of how API works. Please refer to more <a target=\"_blank\" href=\"https://github.com/hwchase17/langchain/blob/master/langchain/chains/api/open_meteo_docs.py\">examples</a>",
                         "rows": 4,
                         "id": "getApiChain_0-input-apiDocs-string"
                     },
@@ -318,7 +318,7 @@
                         "label": "API Documentation",
                         "name": "apiDocs",
                         "type": "string",
-                        "description": "Description of how API works. Please refer to more <a target=\"_blank\" href=\"https://github.com/langchain-ai/langchain/blob/master/libs/langchain/langchain/chains/api/open_meteo_docs.py\">examples</a>",
+                        "description": "Description of how API works. Please refer to more <a target=\"_blank\" href=\"https://github.com/hwchase17/langchain/blob/master/langchain/chains/api/open_meteo_docs.py\">examples</a>",
                         "rows": 4,
                         "id": "postApiChain_0-input-apiDocs-string"
                     },
@@ -507,14 +507,6 @@
                         "optional": true,
                         "additionalParams": true,
                         "id": "chatOpenAI_2-input-basepath-string"
-                    },
-                    {
-                        "label": "BaseOptions",
-                        "name": "baseOptions",
-                        "type": "json",
-                        "optional": true,
-                        "additionalParams": true,
-                        "id": "chatOpenAI_2-input-baseOptions-json"
                     }
                 ],
                 "inputAnchors": [
@@ -534,8 +526,7 @@
                     "frequencyPenalty": "",
                     "presencePenalty": "",
                     "timeout": "",
-                    "basepath": "",
-                    "baseOptions": ""
+                    "basepath": ""
                 },
                 "outputAnchors": [
                     {
@@ -678,14 +669,6 @@
                         "optional": true,
                         "additionalParams": true,
                         "id": "chatOpenAI_1-input-basepath-string"
-                    },
-                    {
-                        "label": "BaseOptions",
-                        "name": "baseOptions",
-                        "type": "json",
-                        "optional": true,
-                        "additionalParams": true,
-                        "id": "chatOpenAI_1-input-baseOptions-json"
                     }
                 ],
                 "inputAnchors": [
@@ -705,8 +688,7 @@
                     "frequencyPenalty": "",
                     "presencePenalty": "",
                     "timeout": "",
-                    "basepath": "",
-                    "baseOptions": ""
+                    "basepath": ""
                 },
                 "outputAnchors": [
                     {
@@ -849,14 +831,6 @@
                         "optional": true,
                         "additionalParams": true,
                         "id": "chatOpenAI_3-input-basepath-string"
-                    },
-                    {
-                        "label": "BaseOptions",
-                        "name": "baseOptions",
-                        "type": "json",
-                        "optional": true,
-                        "additionalParams": true,
-                        "id": "chatOpenAI_3-input-baseOptions-json"
                     }
                 ],
                 "inputAnchors": [
@@ -876,8 +850,7 @@
                     "frequencyPenalty": "",
                     "presencePenalty": "",
                     "timeout": "",
-                    "basepath": "",
-                    "baseOptions": ""
+                    "basepath": ""
                 },
                 "outputAnchors": [
                     {

@@ -20,11 +20,11 @@ class OpenAIFunctionAgent_Agents implements INode {
     constructor() {
         this.label = 'OpenAI Function Agent'
         this.name = 'openAIFunctionAgent'
-        this.version = 2.0
+        this.version = 1.0
         this.type = 'AgentExecutor'
         this.category = 'Agents'
         this.icon = 'openai.png'
-        this.description = `An agent that uses Function Calling to pick the tool and args to call`
+        this.description = `An agent that uses OpenAI's Function Calling functionality to pick the tool and args to call`
         this.baseClasses = [this.type, ...getBaseClasses(AgentExecutor)]
         this.inputs = [
             {
@@ -39,9 +39,11 @@ class OpenAIFunctionAgent_Agents implements INode {
                 type: 'BaseChatMemory'
             },
             {
-                label: 'OpenAI/Azure Chat Model',
+                label: 'OpenAI Chat Model',
                 name: 'model',
-                type: 'ChatOpenAI | AzureChatOpenAI'
+                description:
+                    'Only works with gpt-3.5-turbo-0613 and gpt-4-0613. Refer <a target="_blank" href="https://platform.openai.com/docs/guides/gpt/function-calling">docs</a> for more info',
+                type: 'BaseChatModel'
             },
             {
                 label: 'System Message',

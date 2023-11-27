@@ -23,7 +23,6 @@ export abstract class RedisSearchBase {
     type: string
     icon: string
     category: string
-    badge: string
     baseClasses: string[]
     inputs: INodeParams[]
     credential: INodeParams
@@ -35,7 +34,6 @@ export abstract class RedisSearchBase {
         this.icon = 'redis.svg'
         this.category = 'Vector Stores'
         this.baseClasses = [this.type, 'VectorStoreRetriever', 'BaseRetriever']
-        this.badge = 'DEPRECATING'
         this.credential = {
             label: 'Connect Credential',
             name: 'credential',

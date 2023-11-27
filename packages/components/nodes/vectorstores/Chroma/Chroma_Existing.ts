@@ -12,7 +12,6 @@ class Chroma_Existing_VectorStores implements INode {
     type: string
     icon: string
     category: string
-    badge: string
     baseClasses: string[]
     inputs: INodeParams[]
     credential: INodeParams
@@ -27,7 +26,6 @@ class Chroma_Existing_VectorStores implements INode {
         this.category = 'Vector Stores'
         this.description = 'Load existing index from Chroma (i.e: Document has been upserted)'
         this.baseClasses = [this.type, 'VectorStoreRetriever', 'BaseRetriever']
-        this.badge = 'DEPRECATING'
         this.credential = {
             label: 'Connect Credential',
             name: 'credential',

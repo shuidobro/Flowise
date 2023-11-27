@@ -21,7 +21,6 @@ export abstract class ElasticSearchBase {
     type: string
     icon: string
     category: string
-    badge: string
     baseClasses: string[]
     inputs: INodeParams[]
     credential: INodeParams
@@ -31,7 +30,6 @@ export abstract class ElasticSearchBase {
         this.type = 'Elasticsearch'
         this.icon = 'elasticsearch.png'
         this.category = 'Vector Stores'
-        this.badge = 'DEPRECATING'
         this.baseClasses = [this.type, 'VectorStoreRetriever', 'BaseRetriever']
         this.credential = {
             label: 'Connect Credential',
@@ -146,26 +144,13 @@ export abstract class ElasticSearchBase {
         } else if (cloudId) {
             let username = getCredentialParam('username', credentialData, nodeData)
             let password = getCredentialParam('password', credentialData, nodeData)
-            if (cloudId.startsWith('http')) {
-                elasticSearchClientOptions = {
-                    node: cloudId,
-                    auth: {
-                        username: username,
-                        password: password
-                    },
-                    tls: {
-                        rejectUnauthorized: false
-                    }
-                }
-            } else {
-                elasticSearchClientOptions = {
-                    cloud: {
-                        id: cloudId
-                    },
-                    auth: {
-                        username: username,
-                        password: password
-                    }
+            elasticSearchClientOptions = {
+                cloud: {
+                    id: cloudId
+                },
+                auth: {
+                    username: username,
+                    password: password
                 }
             }
         }

@@ -36,7 +36,4 @@ export class ChatFlow implements IChatFlow {
 
     @UpdateDateColumn()
     updatedDate: Date
-
-    @Column({ nullable: true, type: 'text' })
-    category?: string
 }

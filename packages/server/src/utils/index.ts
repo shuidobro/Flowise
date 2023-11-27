@@ -222,9 +222,7 @@ export const buildLangchain = async (
     chatflowid: string,
     appDataSource: DataSource,
     overrideConfig?: ICommonObject,
-    cachePool?: CachePool,
-    isUpsert?: boolean,
-    stopNodeId?: string
+    cachePool?: CachePool
 ) => {
     const flowNodes = cloneDeep(reactFlowNodes)
 
@@ -256,33 +254,16 @@ export const buildLangchain = async (
             if (overrideConfig) flowNodeData = replaceInputsWithConfig(flowNodeData, overrideConfig)
             const reactFlowNodeData: INodeData = resolveVariables(flowNodeData, flowNodes, question, chatHistory)
 
-            if (
-                isUpsert &&
-                ((stopNodeId && reactFlowNodeData.id === stopNodeId) || (!stopNodeId && reactFlowNodeData.category === 'Vector Stores'))
-            ) {
-                logger.debug(`[server]: Upserting ${reactFlowNode.data.label} (${reactFlowNode.data.id})`)
-                await newNodeInstance.vectorStoreMethods!['upsert']!.call(newNodeInstance, reactFlowNodeData, {
-                    chatId,
-                    chatflowid,
-                    appDataSource,
-                    databaseEntities,
-                    logger,
-                    cachePool
-                })
-                logger.debug(`[server]: Finished upserting ${reactFlowNode.data.label} (${reactFlowNode.data.id})`)
-                break
-            } else {
-                logger.debug(`[server]: Initializing ${reactFlowNode.data.label} (${reactFlowNode.data.id})`)
-                flowNodes[nodeIndex].data.instance = await newNodeInstance.init(reactFlowNodeData, question, {
-                    chatId,
-                    chatflowid,
-                    appDataSource,
-                    databaseEntities,
-                    logger,
-                    cachePool
-                })
-                logger.debug(`[server]: Finished initializing ${reactFlowNode.data.label} (${reactFlowNode.data.id})`)
-            }
+            logger.debug(`[server]: Initializing ${reactFlowNode.data.label} (${reactFlowNode.data.id})`)
+            flowNodes[nodeIndex].data.instance = await newNodeInstance.init(reactFlowNodeData, question, {
+                chatId,
+                chatflowid,
+                appDataSource,
+                databaseEntities,
+                logger,
+                cachePool
+            })
+            logger.debug(`[server]: Finished initializing ${reactFlowNode.data.label} (${reactFlowNode.data.id})`)
         } catch (e: any) {
             logger.error(e)
             throw new Error(e)
@@ -844,7 +825,7 @@ export const findAvailableConfigs = (reactFlowNodes: IReactFlowNode[], component
  */
 export const isFlowValidForStream = (reactFlowNodes: IReactFlowNode[], endingNodeData: INodeData) => {
     const streamAvailableLLMs = {
-        'Chat Models': ['azureChatOpenAI', 'chatOpenAI', 'chatAnthropic', 'chatOllama', 'awsChatBedrock'],
+        'Chat Models': ['azureChatOpenAI', 'chatOpenAI', 'chatAnthropic', 'chatOllama'],
         LLMs: ['azureOpenAI', 'openAI', 'ollama']
     }
 
@@ -861,7 +842,7 @@ export const isFlowValidForStream = (reactFlowNodes: IReactFlowNode[], endingNod
     let isValidChainOrAgent = false
     if (endingNodeData.category === 'Chains') {
         // Chains that are not available to stream
-        const blacklistChains = ['openApiChain', 'vectaraQAChain']
+        const blacklistChains = ['openApiChain']
         isValidChainOrAgent = !blacklistChains.includes(endingNodeData.name)
     } else if (endingNodeData.category === 'Agents') {
         // Agent that are available to stream
@@ -1004,14 +985,10 @@ export const redactCredentialWithPasswordType = (
  * @param {any} instance
  * @param {string} chatId
  */
-export const checkMemorySessionId = (instance: any, chatId: string): string | undefined => {
+export const checkMemorySessionId = (instance: any, chatId: string): string => {
     if (instance.memory && instance.memory.isSessionIdUsingChatMessageId && chatId) {
         instance.memory.sessionId = chatId
         instance.memory.chatHistory.sessionId = chatId
     }
-
-    if (instance.memory && instance.memory.sessionId) return instance.memory.sessionId
-    else if (instance.memory && instance.memory.chatHistory && instance.memory.chatHistory.sessionId)
-        return instance.memory.chatHistory.sessionId
-    return undefined
+    return instance.memory ? instance.memory.sessionId ?? instance.memory.chatHistory.sessionId : undefined
 }

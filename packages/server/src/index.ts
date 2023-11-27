@@ -135,7 +135,6 @@ export class App {
                 '/api/v1/chatflows/apikey/',
                 '/api/v1/public-chatflows',
                 '/api/v1/prediction/',
-                '/api/v1/vector/upsert/',
                 '/api/v1/node-icon/',
                 '/api/v1/components-credentials-icon/',
                 '/api/v1/chatflows-streaming',
@@ -357,12 +356,8 @@ export class App {
             this.AppDataSource.getRepository(ChatFlow).merge(chatflow, updateChatFlow)
             const result = await this.AppDataSource.getRepository(ChatFlow).save(chatflow)
 
-            // chatFlowPool is initialized only when a flow is opened
-            // if the user attempts to rename/update category without opening any flow, chatFlowPool will be undefined
-            if (this.chatflowPool) {
-                // Update chatflowpool inSync to false, to build Langchain again because data has been changed
-                this.chatflowPool.updateInSync(chatflow.id, false)
-            }
+            // Update chatflowpool inSync to false, to build Langchain again because data has been changed
+            this.chatflowPool.updateInSync(chatflow.id, false)
 
             return res.json(result)
         })
@@ -1077,23 +1072,6 @@ export class App {
         })
 
         // ----------------------------------------
-        // Upsert
-        // ----------------------------------------
-
-        this.app.post(
-            '/api/v1/vector/upsert/:id',
-            upload.array('files'),
-            (req: Request, res: Response, next: NextFunction) => getRateLimiter(req, res, next),
-            async (req: Request, res: Response) => {
-                await this.buildChatflow(req, res, undefined, false, true)
-            }
-        )
-
-        this.app.post('/api/v1/vector/internal-upsert/:id', async (req: Request, res: Response) => {
-            await this.buildChatflow(req, res, undefined, true, true)
-        })
-
-        // ----------------------------------------
         // Prediction
         // ----------------------------------------
 
@@ -1103,13 +1081,13 @@ export class App {
             upload.array('files'),
             (req: Request, res: Response, next: NextFunction) => getRateLimiter(req, res, next),
             async (req: Request, res: Response) => {
-                await this.buildChatflow(req, res, socketIO)
+                await this.processPrediction(req, res, socketIO)
             }
         )
 
         // Send input message and get prediction result (Internal)
         this.app.post('/api/v1/internal-prediction/:id', async (req: Request, res: Response) => {
-            await this.buildChatflow(req, res, socketIO, true)
+            await this.processPrediction(req, res, socketIO, true)
         })
 
         // ----------------------------------------
@@ -1166,52 +1144,28 @@ export class App {
         // API Keys
         // ----------------------------------------
 
-        const addChatflowsCount = async (keys: any, res: Response) => {
-            if (keys) {
-                const updatedKeys: any[] = []
-                //iterate through keys and get chatflows
-                for (const key of keys) {
-                    const chatflows = await this.AppDataSource.getRepository(ChatFlow)
-                        .createQueryBuilder('cf')
-                        .where('cf.apikeyid = :apikeyid', { apikeyid: key.id })
-                        .getMany()
-                    const linkedChatFlows: any[] = []
-                    chatflows.map((cf) => {
-                        linkedChatFlows.push({
-                            flowName: cf.name,
-                            category: cf.category,
-                            updatedDate: cf.updatedDate
-                        })
-                    })
-                    key.chatFlows = linkedChatFlows
-                    updatedKeys.push(key)
-                }
-                return res.json(updatedKeys)
-            }
-            return res.json(keys)
-        }
         // Get api keys
         this.app.get('/api/v1/apikey', async (req: Request, res: Response) => {
             const keys = await getAPIKeys()
-            return addChatflowsCount(keys, res)
+            return res.json(keys)
         })
 
         // Add new api key
         this.app.post('/api/v1/apikey', async (req: Request, res: Response) => {
             const keys = await addAPIKey(req.body.keyName)
-            return addChatflowsCount(keys, res)
+            return res.json(keys)
         })
 
         // Update api key
         this.app.put('/api/v1/apikey/:id', async (req: Request, res: Response) => {
             const keys = await updateAPIKey(req.params.id, req.body.keyName)
-            return addChatflowsCount(keys, res)
+            return res.json(keys)
         })
 
         // Delete new api key
         this.app.delete('/api/v1/apikey/:id', async (req: Request, res: Response) => {
             const keys = await deleteAPIKey(req.params.id)
-            return addChatflowsCount(keys, res)
+            return res.json(keys)
         })
 
         // Verify api key
@@ -1339,14 +1293,13 @@ export class App {
     }
 
     /**
-     * Build Chatflow
+     * Process Prediction
      * @param {Request} req
      * @param {Response} res
      * @param {Server} socketIO
      * @param {boolean} isInternal
-     * @param {boolean} isUpsert
      */
-    async buildChatflow(req: Request, res: Response, socketIO?: Server, isInternal: boolean = false, isUpsert: boolean = false) {
+    async processPrediction(req: Request, res: Response, socketIO?: Server, isInternal: boolean = false) {
         try {
             const chatflowid = req.params.id
             let incomingInput: IncomingInput = req.body
@@ -1387,8 +1340,7 @@ export class App {
                     question: req.body.question ?? 'hello',
                     overrideConfig,
                     history: [],
-                    socketIOClientId: req.body.socketIOClientId,
-                    stopNodeId: req.body.stopNodeId
+                    socketIOClientId: req.body.socketIOClientId
                 }
             }
 
@@ -1413,8 +1365,7 @@ export class App {
                         this.chatflowPool.activeChatflows[chatflowid].overrideConfig,
                         incomingInput.overrideConfig
                     ) &&
-                    !isStartNodeDependOnInput(this.chatflowPool.activeChatflows[chatflowid].startingNodes, nodes) &&
-                    !isUpsert
+                    !isStartNodeDependOnInput(this.chatflowPool.activeChatflows[chatflowid].startingNodes, nodes)
                 )
             }
 
@@ -1434,15 +1385,14 @@ export class App {
                 const endingNodeData = nodes.find((nd) => nd.id === endingNodeId)?.data
                 if (!endingNodeData) return res.status(500).send(`Ending node ${endingNodeId} data not found`)
 
-                if (endingNodeData && endingNodeData.category !== 'Chains' && endingNodeData.category !== 'Agents' && !isUpsert) {
+                if (endingNodeData && endingNodeData.category !== 'Chains' && endingNodeData.category !== 'Agents') {
                     return res.status(500).send(`Ending node must be either a Chain or Agent`)
                 }
 
                 if (
                     endingNodeData.outputs &&
                     Object.keys(endingNodeData.outputs).length &&
-                    !Object.values(endingNodeData.outputs).includes(endingNodeData.name) &&
-                    !isUpsert
+                    !Object.values(endingNodeData.outputs).includes(endingNodeData.name)
                 ) {
                     return res
                         .status(500)
@@ -1472,11 +1422,8 @@ export class App {
                     chatflowid,
                     this.AppDataSource,
                     incomingInput?.overrideConfig,
-                    this.cachePool,
-                    isUpsert,
-                    incomingInput.stopNodeId
+                    this.cachePool
                 )
-                if (isUpsert) return res.status(201).send('Successfully Upserted')
 
                 const nodeToExecute = reactFlowNodes.find((node: IReactFlowNode) => node.id === endingNodeId)
                 if (!nodeToExecute) return res.status(404).send(`Node ${endingNodeId} not found`)

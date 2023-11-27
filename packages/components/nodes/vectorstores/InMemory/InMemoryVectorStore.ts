@@ -1,9 +1,9 @@
-import { flatten } from 'lodash'
+import { INode, INodeData, INodeOutputsValue, INodeParams } from '../../../src/Interface'
 import { MemoryVectorStore } from 'langchain/vectorstores/memory'
 import { Embeddings } from 'langchain/embeddings/base'
 import { Document } from 'langchain/document'
-import { INode, INodeData, INodeOutputsValue, INodeParams } from '../../../src/Interface'
 import { getBaseClasses } from '../../../src/utils'
+import { flatten } from 'lodash'
 
 class InMemoryVectorStore_VectorStores implements INode {
     label: string
@@ -31,8 +31,7 @@ class InMemoryVectorStore_VectorStores implements INode {
                 label: 'Document',
                 name: 'document',
                 type: 'Document',
-                list: true,
-                optional: true
+                list: true
             },
             {
                 label: 'Embeddings',
@@ -60,28 +59,6 @@ class InMemoryVectorStore_VectorStores implements INode {
                 baseClasses: [this.type, ...getBaseClasses(MemoryVectorStore)]
             }
         ]
-    }
-
-    //@ts-ignore
-    vectorStoreMethods = {
-        async upsert(nodeData: INodeData): Promise<void> {
-            const docs = nodeData.inputs?.document as Document[]
-            const embeddings = nodeData.inputs?.embeddings as Embeddings
-
-            const flattenDocs = docs && docs.length ? flatten(docs) : []
-            const finalDocs = []
-            for (let i = 0; i < flattenDocs.length; i += 1) {
-                if (flattenDocs[i] && flattenDocs[i].pageContent) {
-                    finalDocs.push(new Document(flattenDocs[i]))
-                }
-            }
-
-            try {
-                await MemoryVectorStore.fromDocuments(finalDocs, embeddings)
-            } catch (e) {
-                throw new Error(e)
-            }
-        }
     }
 
     async init(nodeData: INodeData): Promise<any> {

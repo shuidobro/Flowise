@@ -1,11 +1,11 @@
 import PropTypes from 'prop-types'
 import { TableContainer, Table, TableHead, TableCell, TableRow, TableBody, Paper } from '@mui/material'
 
-export const TableViewOnly = ({ columns, rows, sx }) => {
+export const TableViewOnly = ({ columns, rows }) => {
     return (
         <>
             <TableContainer component={Paper}>
-                <Table sx={{ minWidth: 650, ...sx }} aria-label='simple table'>
+                <Table sx={{ minWidth: 650 }} aria-label='simple table'>
                     <TableHead>
                         <TableRow>
                             {columns.map((col, index) => (
@@ -16,9 +16,11 @@ export const TableViewOnly = ({ columns, rows, sx }) => {
                     <TableBody>
                         {rows.map((row, index) => (
                             <TableRow key={index} sx={{ '&:last-child td, &:last-child th': { border: 0 } }}>
-                                {Object.keys(row).map((key, index) => (
-                                    <TableCell key={index}>{row[key]}</TableCell>
-                                ))}
+                                {Object.keys(row)
+                                    .slice(-3)
+                                    .map((key, index) => (
+                                        <TableCell key={index}>{row[key]}</TableCell>
+                                    ))}
                             </TableRow>
                         ))}
                     </TableBody>
@@ -30,6 +32,5 @@ export const TableViewOnly = ({ columns, rows, sx }) => {
 
 TableViewOnly.propTypes = {
     rows: PropTypes.array,
-    columns: PropTypes.array,
-    sx: PropTypes.object
+    columns: PropTypes.array
 }
